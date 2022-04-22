@@ -28,7 +28,7 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        loginBtn.setOnClickListener { onLogin(it) }
+        loginBtn.setOnClickListener { onLogin() }
         gotoSignupBtn.setOnClickListener { onGotoSignup(it) }
 
         viewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
@@ -36,19 +36,25 @@ class LoginFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.loginComplete.observe(this, Observer { isComplete ->
+        viewModel.loginComplete.observe(viewLifecycleOwner) { isComplete ->
+            Toast.makeText(activity, "Longin Success", Toast.LENGTH_LONG).show()
+            val action = LoginFragmentDirections.actionGoToMain()
+            Navigation.findNavController(loginBtn).navigate(action)
+        }
 
-        })
-
-        viewModel.error.observe(this, Observer { error ->
-
-
-        })
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            Toast.makeText(activity, "Longin failed - $error", Toast.LENGTH_LONG).show()
+        }
     }
 
-    private fun onLogin(v: View) {
-        val action = LoginFragmentDirections.actionGoToMain()
-        Navigation.findNavController(v).navigate(action)
+    private fun onLogin() {
+       val username = loginUsername.text.toString()
+        val password = loginPassword.text.toString()
+        if (username.isNullOrEmpty() || password.isNullOrEmpty()) {
+            Toast.makeText(activity, "Please fill all fields", Toast.LENGTH_LONG).show()
+        } else {
+            viewModel.login(username, password)
+        }
     }
 
     private fun onGotoSignup(v: View){

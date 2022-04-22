@@ -4,12 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import com.devtides.coroutinesroom.R
+import com.devtides.coroutinesroom.model.LoginState
 import com.devtides.coroutinesroom.viewmodel.SignupViewModel
+import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.fragment_signup.*
 
 class SignupFragment : Fragment() {
@@ -25,6 +28,7 @@ class SignupFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         signupBtn.setOnClickListener { onSignup(it) }
         gotoLoginBtn.setOnClickListener { onGotoLogin(it) }
 
@@ -33,18 +37,27 @@ class SignupFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.signupComplete.observe(this, Observer { isComplete ->
+        viewModel.signupComplete.observe(viewLifecycleOwner) { isComplete ->
+            Toast.makeText(activity, "Signup Complete", Toast.LENGTH_LONG).show()
+            val action = SignupFragmentDirections.actionGoToMain()
+            Navigation.findNavController(signupUsername).navigate(action)
+        }
 
-        })
-
-        viewModel.error.observe(this, Observer { error ->
-
-        })
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            Toast.makeText(activity, "Error : $error", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun onSignup(v: View){
-        val action = SignupFragmentDirections.actionGoToMain()
-        Navigation.findNavController(v).navigate(action)
+        val username = signupUsername.text.toString()
+        val password = signupPassword.text.toString()
+        val info = otherInfo.text.toString()
+
+        if (username.isNullOrEmpty() || password.isNullOrEmpty() || info.isNullOrEmpty()) {
+            Toast.makeText(activity, "Please fill all fields", Toast.LENGTH_LONG).show()
+        } else {
+            viewModel.signup(username, password, info)
+        }
     }
 
     private fun onGotoLogin(v: View) {
